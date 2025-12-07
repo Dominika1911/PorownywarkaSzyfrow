@@ -1,0 +1,108 @@
+##############################
+# Visual Studio / .NET
+##############################
+
+# Build results
+bin/
+obj/
+[Bb]uild/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+*.user
+*.userosscache
+*.suo
+*.cache
+*.pdb
+*.opendb
+
+# Lock files
+*.lock.json
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# MSBuild
+*.props
+*.targets
+
+# Publish output
+publish/
+artifacts/
+
+##############################
+# Rider / ReSharper
+##############################
+
+# Rider project files
+.idea/
+*.sln.iml
+
+# ReSharper caches
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Rider system dirs
+# (Rider regeneruje je automatycznie)
+.idea/.idea.*
+.idea/system/
+.idea/workspace.xml
+
+##############################
+# Operating system
+##############################
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+##############################
+# DotNET-specific
+##############################
+
+# Global tool caches
+.dotnet/
+
+# Roslyn
+*.ide/
+
+# Local environment overrides
+appsettings.Development.json
+appsettings.Local.json
+
+##############################
+# Logs
+##############################
+
+*.log
+*.log.*
+logs/
+
+##############################
+# Temporary files
+##############################
+
+*.tmp
+*.temp
+*.bak
+*.old
+
+##############################
+# VS Code (opcjonalnie, jeśli używasz)
+##############################
+.vscode/
+*.code-workspace

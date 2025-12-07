@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35312.102
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PorownywarkaSzyfrow", "PorownywarkaSzyfrow\PorownywarkaSzyfrow.csproj", "{A69ADD9B-46BC-4D66-AD3B-F569EB4D21BE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A69ADD9B-46BC-4D66-AD3B-F569EB4D21BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A69ADD9B-46BC-4D66-AD3B-F569EB4D21BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A69ADD9B-46BC-4D66-AD3B-F569EB4D21BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A69ADD9B-46BC-4D66-AD3B-F569EB4D21BE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0C242C0C-5C23-4AC5-9D05-7DD412EE50D6}
+	EndGlobalSection
+EndGlobal
