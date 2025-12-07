@@ -102,7 +102,7 @@ logs/
 *.old
 
 ##############################
-# VS Code (opcjonalnie, jeśli używasz)
+# VS Code
 ##############################
 .vscode/
 *.code-workspace
