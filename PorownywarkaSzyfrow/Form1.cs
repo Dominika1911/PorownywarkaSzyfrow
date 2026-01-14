@@ -11,7 +11,6 @@ namespace PorownywarkaSzyfrow
         {
             InitializeComponent();
 
-            // Inicjalizacja comboboxa, jeśli nie zrobiłeś tego w designerze
             if (cmbAlgorithm.Items.Count == 0)
             {
                 cmbAlgorithm.Items.Add("Vigenere");
@@ -20,25 +19,21 @@ namespace PorownywarkaSzyfrow
             }
             cmbAlgorithm.SelectedIndex = 0;
 
-            // Drag & Drop dla pola pliku wejściowego
             txtInputFile.AllowDrop = true;
             txtInputFile.DragEnter += TxtInputFile_DragEnter;
             txtInputFile.DragDrop += TxtInputFile_DragDrop;
 
-            // Na początku brak napisu
             lblStatus.Text = string.Empty;
 
-            // Podpięcie zdarzeń przycisków
             btnBrowseInput.Click += btnBrowseInput_Click;
             btnBrowseOutput.Click += btnBrowseOutput_Click;
             btnEncrypt.Click += btnEncrypt_Click;
             btnDecrypt.Click += btnDecrypt_Click;
 
-            // Kopiuj log
             btnCopyLog.Click += btnCopyLog_Click;
         }
 
-        private void TxtInputFile_DragEnter(object? sender, DragEventArgs e)
+        private void TxtInputFile_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data != null && e.Data.GetDataPresent(DataFormats.FileDrop))
                 e.Effect = DragDropEffects.Copy;
@@ -46,21 +41,20 @@ namespace PorownywarkaSzyfrow
                 e.Effect = DragDropEffects.None;
         }
 
-        private void TxtInputFile_DragDrop(object? sender, DragEventArgs e)
+        private void TxtInputFile_DragDrop(object sender, DragEventArgs e)
         {
-            if (e.Data?.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0)
+            if (e.Data != null && e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0)
             {
                 string filePath = files[0];
                 txtInputFile.Text = filePath;
 
-                // przy wyborze nowego pliku status i log znikają
                 lblStatus.Text = string.Empty;
                 txtLog.Clear();
 
                 if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
                 {
-                    var dir = Path.GetDirectoryName(filePath) ?? "";
-                    var name = Path.GetFileName(filePath);
+                    string dir = Path.GetDirectoryName(filePath) ?? "";
+                    string name = Path.GetFileName(filePath);
 
                     if (name.EndsWith(".enc", StringComparison.OrdinalIgnoreCase))
                         name = name[..^4];
@@ -72,66 +66,70 @@ namespace PorownywarkaSzyfrow
             }
         }
 
-        private void btnBrowseInput_Click(object? sender, EventArgs e)
+        private void btnBrowseInput_Click(object sender, EventArgs e)
         {
-            using var ofd = new OpenFileDialog
+            OpenFileDialog ofd = new OpenFileDialog
             {
                 Title = "Wybierz plik wejściowy",
                 Filter = "Wszystkie pliki|*.*"
             };
 
-            if (ofd.ShowDialog(this) == DialogResult.OK)
+            using (ofd)
             {
-                string filePath = ofd.FileName;
-                txtInputFile.Text = filePath;
-
-                // przy wyborze nowego pliku status i log znikają
-                lblStatus.Text = string.Empty;
-                txtLog.Clear();
-
-                if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
+                if (ofd.ShowDialog(this) == DialogResult.OK)
                 {
-                    var dir = Path.GetDirectoryName(filePath) ?? "";
-                    var name = Path.GetFileName(filePath);
+                    string filePath = ofd.FileName;
+                    txtInputFile.Text = filePath;
 
-                    if (name.EndsWith(".enc", StringComparison.OrdinalIgnoreCase))
-                        name = name[..^4];
-                    else
-                        name += ".enc";
+                    lblStatus.Text = string.Empty;
+                    txtLog.Clear();
 
-                    txtOutputFile.Text = Path.Combine(dir, name);
+                    if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
+                    {
+                        string dir = Path.GetDirectoryName(filePath) ?? "";
+                        string name = Path.GetFileName(filePath);
+
+                        if (name.EndsWith(".enc", StringComparison.OrdinalIgnoreCase))
+                            name = name[..^4];
+                        else
+                            name += ".enc";
+
+                        txtOutputFile.Text = Path.Combine(dir, name);
+                    }
                 }
             }
         }
 
-        private void btnBrowseOutput_Click(object? sender, EventArgs e)
+        private void btnBrowseOutput_Click(object sender, EventArgs e)
         {
-            using var sfd = new SaveFileDialog
+            SaveFileDialog sfd = new SaveFileDialog
             {
                 Title = "Wybierz plik wynikowy",
                 Filter = "Wszystkie pliki|*.*",
                 FileName = txtOutputFile.Text
             };
 
-            if (sfd.ShowDialog(this) == DialogResult.OK)
+            using (sfd)
             {
-                txtOutputFile.Text = sfd.FileName;
-                lblStatus.Text = string.Empty;
-                // log zostawiamy – zmiana pliku wynikowego nie resetuje wyników pomiarów
+                if (sfd.ShowDialog(this) == DialogResult.OK)
+                {
+                    txtOutputFile.Text = sfd.FileName;
+                    lblStatus.Text = string.Empty;
+                }
             }
         }
 
-        private void btnEncrypt_Click(object? sender, EventArgs e)
+        private void btnEncrypt_Click(object sender, EventArgs e)
         {
-            RunCrypto(isEncrypt: true);
+            RunCrypto(true);
         }
 
-        private void btnDecrypt_Click(object? sender, EventArgs e)
+        private void btnDecrypt_Click(object sender, EventArgs e)
         {
-            RunCrypto(isEncrypt: false);
+            RunCrypto(false);
         }
 
-        private void btnCopyLog_Click(object? sender, EventArgs e)
+        private void btnCopyLog_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrWhiteSpace(txtLog.Text))
             {
@@ -141,7 +139,7 @@ namespace PorownywarkaSzyfrow
 
         private void RunCrypto(bool isEncrypt)
         {
-            var stopwatch = new Stopwatch();
+            Stopwatch stopwatch = new Stopwatch();
 
             try
             {
@@ -163,7 +161,6 @@ namespace PorownywarkaSzyfrow
 
                 bool inputIsEnc = inputPath.EndsWith(".enc", StringComparison.OrdinalIgnoreCase);
 
-                // Walidacja typu operacji vs rozszerzenie
                 if (isEncrypt && inputIsEnc)
                     throw new InvalidOperationException("Próba zaszyfrowania pliku, który już jest zaszyfrowany.");
 
@@ -181,13 +178,11 @@ namespace PorownywarkaSzyfrow
                 }
                 else
                 {
-                    // odczyt algorytmu z nagłówka
                     algoUsed = CryptoCore.DecryptFile(inputPath, outputPath, password);
                 }
 
                 stopwatch.Stop();
 
-                // Log do textBoxa:
                 string operacja = isEncrypt ? "zaszyfrowania" : "odszyfrowania";
                 string line = $"Algorytm: {algoUsed}, czas {operacja}: {stopwatch.Elapsed.TotalMilliseconds:0.00} ms";
 
@@ -196,7 +191,6 @@ namespace PorownywarkaSzyfrow
 
                 txtLog.AppendText(line);
 
-                // Sukces: pokaż tylko "Gotowe"
                 lblStatus.Text = "Gotowe";
 
                 txtInputFile.Clear();
@@ -208,7 +202,6 @@ namespace PorownywarkaSzyfrow
                 stopwatch.Stop();
                 MessageBox.Show(this, "Operacja nie powiodła się.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                // Błąd: status i pola wchodzą w stan "reset", żeby się nic nie blokowało
                 lblStatus.Text = "Błąd";
 
                 txtInputFile.Clear();

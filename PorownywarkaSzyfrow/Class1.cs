@@ -7,7 +7,6 @@ using System.Text;
 
 namespace PorownywarkaSzyfrow
 {
-    // MUSI być public, żeby Form1 go widział
     public enum AlgoId : byte
     {
         Vigenere = 1,
@@ -15,94 +14,97 @@ namespace PorownywarkaSzyfrow
         RC2 = 3
     }
 
-    // Cały "silnik" z twojego programu konsolowego
     public static class CryptoCore
     {
-        // Prosty format pliku: MAGIC(4) + VER(1) + ALG(1) + SALTLEN(1) + IVLEN(1) + SALT + IV + DATA...
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("TSZ1");
         private const byte Version = 1;
-
-        // === PUBLICZNE METODY, których użyje Form1 ===
 
         public static void EncryptFile(string inputPath, string outputPath, string password, AlgoId algo)
         {
             if (!File.Exists(inputPath))
                 throw new FileNotFoundException("Plik wejściowy nie istnieje.", inputPath);
 
-            using var inFs = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using var outFs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            FileStream inFs = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            FileStream outFs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
 
-            if (algo == AlgoId.DES)
+            using (inFs)
+            using (outFs)
             {
-                byte[] iv = RandomBytes(8);
+                if (algo == AlgoId.DES)
+                {
+                    byte[] iv = RandomBytes(8);
 
-                byte[] salt;
-                byte[] preDerivedKey;
-                (salt, preDerivedKey) = DeriveSafeDesKeyByResalting(password, saltLen: 16, iterations: 100_000);
+                    byte[] salt;
+                    byte[] preDerivedKey;
+                    (salt, preDerivedKey) = DeriveSafeDesKeyByResalting(password, 16, 100_000);
 
-                WriteHeader(outFs, algo, salt, iv);
-                EncryptWithSymmetricKey(inFs, outFs, CreateDes, preDerivedKey, iv);
-                return;
+                    WriteHeader(outFs, algo, salt, iv);
+                    EncryptWithSymmetricKey(inFs, outFs, CreateDes, preDerivedKey, iv);
+                    return;
+                }
+
+                if (algo == AlgoId.RC2)
+                {
+                    byte[] iv = RandomBytes(8);
+                    byte[] salt = RandomBytes(16);
+
+                    WriteHeader(outFs, algo, salt, iv);
+                    EncryptWithSymmetricPassword(inFs, outFs, password, salt, iv, CreateRc2, 16);
+                    return;
+                }
+
+                WriteHeader(outFs, AlgoId.Vigenere, Array.Empty<byte>(), Array.Empty<byte>());
+                EncryptVigenereStream(inFs, outFs, password);
             }
-
-            if (algo == AlgoId.RC2)
-            {
-                byte[] iv = RandomBytes(8);
-                byte[] salt = RandomBytes(16);
-
-                WriteHeader(outFs, algo, salt, iv);
-                EncryptWithSymmetricPassword(inFs, outFs, password, salt, iv, CreateRc2, 16);
-                return;
-            }
-
-            // Vigenère
-            WriteHeader(outFs, AlgoId.Vigenere, Array.Empty<byte>(), Array.Empty<byte>());
-            EncryptVigenereStream(inFs, outFs, password);
         }
 
-        // ZWRACA algorytm z nagłówka, żeby GUI mogło go pokazać w logu
         public static AlgoId DecryptFile(string inputPath, string outputPath, string password)
         {
             if (!File.Exists(inputPath))
                 throw new FileNotFoundException("Plik wejściowy nie istnieje.", inputPath);
 
-            using var inFs = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using var outFs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            FileStream inFs = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            FileStream outFs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
 
-            var header = ReadHeader(inFs);
-            var algo = header.Algo;
-
-            switch (algo)
+            using (inFs)
+            using (outFs)
             {
-                case AlgoId.Vigenere:
-                    DecryptVigenereStream(inFs, outFs, password);
-                    break;
+                Header header = ReadHeader(inFs);
+                AlgoId algo = header.Algo;
 
-                case AlgoId.DES:
-                    var desKey = DeriveKey(password, header.Salt, iterations: 100_000, keyBytes: 8);
-                    RejectWeakDesKey(desKey);
-                    DecryptWithSymmetricKey(inFs, outFs, createAlgo: CreateDes, key: desKey, iv: header.IV);
-                    break;
+                switch (algo)
+                {
+                    case AlgoId.Vigenere:
+                        DecryptVigenereStream(inFs, outFs, password);
+                        break;
 
-                case AlgoId.RC2:
-                    DecryptWithSymmetricPassword(inFs, outFs, password, header.Salt, header.IV, createAlgo: CreateRc2, keyBytes: 16);
-                    break;
+                    case AlgoId.DES:
+                        byte[] desKey = DeriveKey(password, header.Salt, 100_000, 8);
+                        RejectWeakDesKey(desKey);
+                        DecryptWithSymmetricKey(inFs, outFs, CreateDes, desKey, header.IV);
+                        break;
 
-                default:
-                    throw new InvalidOperationException("Nieobsługiwany algorytm w nagłówku.");
+                    case AlgoId.RC2:
+                        DecryptWithSymmetricPassword(inFs, outFs, password, header.Salt, header.IV, CreateRc2, 16);
+                        break;
+
+                    default:
+                        throw new InvalidOperationException("Nieobsługiwany algorytm w nagłówku.");
+                }
+
+                return algo;
             }
-
-            return algo;
         }
 
-        // === PONIŻEJ: reszta prywatnych metod z twojego Program.cs ===
-        // Vigenere, DES/RC2, nagłówek, KDF itp.
-
         private static void EncryptVigenereStream(Stream input, Stream output, string password)
-            => VigenereTransformStream(input, output, password, encrypt: true);
+        {
+            VigenereTransformStream(input, output, password, true);
+        }
 
         private static void DecryptVigenereStream(Stream input, Stream output, string password)
-            => VigenereTransformStream(input, output, password, encrypt: false);
+        {
+            VigenereTransformStream(input, output, password, false);
+        }
 
         private static void VigenereTransformStream(Stream input, Stream output, string password, bool encrypt)
         {
@@ -130,7 +132,7 @@ namespace PorownywarkaSzyfrow
 
         private static SymmetricAlgorithm CreateDes()
         {
-            var des = DES.Create();
+            SymmetricAlgorithm des = DES.Create();
             des.Mode = CipherMode.CBC;
             des.Padding = PaddingMode.PKCS7;
             des.KeySize = 64;
@@ -139,7 +141,7 @@ namespace PorownywarkaSzyfrow
 
         private static SymmetricAlgorithm CreateRc2()
         {
-            var rc2 = RC2.Create();
+            SymmetricAlgorithm rc2 = RC2.Create();
             rc2.Mode = CipherMode.CBC;
             rc2.Padding = PaddingMode.PKCS7;
             rc2.KeySize = 128;
@@ -156,13 +158,19 @@ namespace PorownywarkaSzyfrow
             Func<SymmetricAlgorithm> createAlgo,
             int keyBytes)
         {
-            using var algo = createAlgo();
-            algo.Key = DeriveKey(password, salt, iterations: 100_000, keyBytes: keyBytes);
-            algo.IV = iv;
+            SymmetricAlgorithm algo = createAlgo();
+            using (algo)
+            {
+                algo.Key = DeriveKey(password, salt, 100_000, keyBytes);
+                algo.IV = iv;
 
-            using var crypto = new CryptoStream(output, algo.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true);
-            CopyStream(input, crypto);
-            crypto.FlushFinalBlock();
+                CryptoStream crypto = new CryptoStream(output, algo.CreateEncryptor(), CryptoStreamMode.Write, true);
+                using (crypto)
+                {
+                    CopyStream(input, crypto);
+                    crypto.FlushFinalBlock();
+                }
+            }
         }
 
         private static void DecryptWithSymmetricPassword(
@@ -174,12 +182,18 @@ namespace PorownywarkaSzyfrow
             Func<SymmetricAlgorithm> createAlgo,
             int keyBytes)
         {
-            using var algo = createAlgo();
-            algo.Key = DeriveKey(password, salt, iterations: 100_000, keyBytes: keyBytes);
-            algo.IV = iv;
+            SymmetricAlgorithm algo = createAlgo();
+            using (algo)
+            {
+                algo.Key = DeriveKey(password, salt, 100_000, keyBytes);
+                algo.IV = iv;
 
-            using var crypto = new CryptoStream(input, algo.CreateDecryptor(), CryptoStreamMode.Read, leaveOpen: true);
-            CopyStream(crypto, output);
+                CryptoStream crypto = new CryptoStream(input, algo.CreateDecryptor(), CryptoStreamMode.Read, true);
+                using (crypto)
+                {
+                    CopyStream(crypto, output);
+                }
+            }
         }
 
         private static void EncryptWithSymmetricKey(
@@ -189,13 +203,19 @@ namespace PorownywarkaSzyfrow
             byte[] key,
             byte[] iv)
         {
-            using var algo = createAlgo();
-            algo.Key = key;
-            algo.IV = iv;
+            SymmetricAlgorithm algo = createAlgo();
+            using (algo)
+            {
+                algo.Key = key;
+                algo.IV = iv;
 
-            using var crypto = new CryptoStream(output, algo.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true);
-            CopyStream(input, crypto);
-            crypto.FlushFinalBlock();
+                CryptoStream crypto = new CryptoStream(output, algo.CreateEncryptor(), CryptoStreamMode.Write, true);
+                using (crypto)
+                {
+                    CopyStream(input, crypto);
+                    crypto.FlushFinalBlock();
+                }
+            }
         }
 
         private static void DecryptWithSymmetricKey(
@@ -205,12 +225,18 @@ namespace PorownywarkaSzyfrow
             byte[] key,
             byte[] iv)
         {
-            using var algo = createAlgo();
-            algo.Key = key;
-            algo.IV = iv;
+            SymmetricAlgorithm algo = createAlgo();
+            using (algo)
+            {
+                algo.Key = key;
+                algo.IV = iv;
 
-            using var crypto = new CryptoStream(input, algo.CreateDecryptor(), CryptoStreamMode.Read, leaveOpen: true);
-            CopyStream(crypto, output);
+                CryptoStream crypto = new CryptoStream(input, algo.CreateDecryptor(), CryptoStreamMode.Read, true);
+                using (crypto)
+                {
+                    CopyStream(crypto, output);
+                }
+            }
         }
 
         private static void CopyStream(Stream from, Stream to)
@@ -226,7 +252,7 @@ namespace PorownywarkaSzyfrow
             for (int attempt = 0; attempt < 10_000; attempt++)
             {
                 byte[] salt = RandomBytes(saltLen);
-                byte[] key = DeriveKey(password, salt, iterations, keyBytes: 8);
+                byte[] key = DeriveKey(password, salt, iterations, 8);
 
                 if (!DES.IsWeakKey(key) && !DES.IsSemiWeakKey(key))
                     return (salt, key);
@@ -247,8 +273,11 @@ namespace PorownywarkaSzyfrow
 
         private static byte[] DeriveKey(string password, byte[] salt, int iterations, int keyBytes)
         {
-            using var kdf = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
-            return kdf.GetBytes(keyBytes);
+            Rfc2898DeriveBytes kdf = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
+            using (kdf)
+            {
+                return kdf.GetBytes(keyBytes);
+            }
         }
 
         private static void WriteHeader(Stream output, AlgoId algo, byte[] salt, byte[] iv)
