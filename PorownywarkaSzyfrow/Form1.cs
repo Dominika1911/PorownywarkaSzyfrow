@@ -207,7 +207,13 @@ namespace PorownywarkaSzyfrow
             {
                 stopwatch.Stop();
                 MessageBox.Show(this, "Operacja nie powiodła się.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                // Błąd: status i pola wchodzą w stan "reset", żeby się nic nie blokowało
                 lblStatus.Text = "Błąd";
+
+                txtInputFile.Clear();
+                txtOutputFile.Clear();
+                txtPassword.Clear();
             }
             finally
             {
