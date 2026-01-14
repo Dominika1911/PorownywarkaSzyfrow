@@ -41,6 +41,8 @@
             btnEncrypt = new Button();
             btnDecrypt = new Button();
             lblStatus = new Label();
+            txtLog = new TextBox();
+            btnCopyLog = new Button();
             SuspendLayout();
             // 
             // lblInput
@@ -156,17 +158,39 @@
             // 
             lblStatus.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             lblStatus.AutoSize = true;
-            lblStatus.Location = new Point(404, 383);
+            lblStatus.Location = new Point(404, 370);
             lblStatus.Name = "lblStatus";
             lblStatus.Size = new Size(61, 20);
             lblStatus.TabIndex = 12;
             lblStatus.Text = "Gotowe";
+            // 
+            // txtLog
+            // 
+            txtLog.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            txtLog.Location = new Point(37, 411);
+            txtLog.Multiline = true;
+            txtLog.Name = "txtLog";
+            txtLog.ReadOnly = true;
+            txtLog.ScrollBars = ScrollBars.Vertical;
+            txtLog.Size = new Size(600, 34);
+            txtLog.TabIndex = 13;
+            // 
+            // btnCopyLog
+            // 
+            btnCopyLog.Location = new Point(672, 416);
+            btnCopyLog.Name = "btnCopyLog";
+            btnCopyLog.Size = new Size(94, 29);
+            btnCopyLog.TabIndex = 14;
+            btnCopyLog.Text = "Kopiuj";
+            btnCopyLog.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnCopyLog);
+            Controls.Add(txtLog);
             Controls.Add(lblStatus);
             Controls.Add(btnDecrypt);
             Controls.Add(btnEncrypt);
@@ -202,5 +226,7 @@
         private Button btnEncrypt;
         private Button btnDecrypt;
         private Label lblStatus;
+        private TextBox txtLog;
+        private Button btnCopyLog;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 
@@ -27,11 +28,14 @@ namespace PorownywarkaSzyfrow
             // Na początku brak napisu
             lblStatus.Text = string.Empty;
 
-            // Podpięcie zdarzeń przycisków (jeśli nie zrobiłeś tego w designerze)
+            // Podpięcie zdarzeń przycisków
             btnBrowseInput.Click += btnBrowseInput_Click;
             btnBrowseOutput.Click += btnBrowseOutput_Click;
             btnEncrypt.Click += btnEncrypt_Click;
             btnDecrypt.Click += btnDecrypt_Click;
+
+            // Kopiuj log
+            btnCopyLog.Click += btnCopyLog_Click;
         }
 
         private void TxtInputFile_DragEnter(object? sender, DragEventArgs e)
@@ -49,19 +53,19 @@ namespace PorownywarkaSzyfrow
                 string filePath = files[0];
                 txtInputFile.Text = filePath;
 
-                // przy wyborze nowego pliku status znika
+                // przy wyborze nowego pliku status i log znikają
                 lblStatus.Text = string.Empty;
+                txtLog.Clear();
 
                 if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
                 {
                     var dir = Path.GetDirectoryName(filePath) ?? "";
                     var name = Path.GetFileName(filePath);
 
-                    // logika .enc
                     if (name.EndsWith(".enc", StringComparison.OrdinalIgnoreCase))
-                        name = name[..^4];   // usuń ".enc"
+                        name = name[..^4];
                     else
-                        name += ".enc";      // dodaj ".enc"
+                        name += ".enc";
 
                     txtOutputFile.Text = Path.Combine(dir, name);
                 }
@@ -81,7 +85,9 @@ namespace PorownywarkaSzyfrow
                 string filePath = ofd.FileName;
                 txtInputFile.Text = filePath;
 
+                // przy wyborze nowego pliku status i log znikają
                 lblStatus.Text = string.Empty;
+                txtLog.Clear();
 
                 if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
                 {
@@ -111,6 +117,7 @@ namespace PorownywarkaSzyfrow
             {
                 txtOutputFile.Text = sfd.FileName;
                 lblStatus.Text = string.Empty;
+                // log zostawiamy – zmiana pliku wynikowego nie resetuje wyników pomiarów
             }
         }
 
@@ -124,8 +131,18 @@ namespace PorownywarkaSzyfrow
             RunCrypto(isEncrypt: false);
         }
 
+        private void btnCopyLog_Click(object? sender, EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(txtLog.Text))
+            {
+                Clipboard.SetText(txtLog.Text);
+            }
+        }
+
         private void RunCrypto(bool isEncrypt)
         {
+            var stopwatch = new Stopwatch();
+
             try
             {
                 lblStatus.Text = "Pracuję...";
@@ -146,22 +163,38 @@ namespace PorownywarkaSzyfrow
 
                 bool inputIsEnc = inputPath.EndsWith(".enc", StringComparison.OrdinalIgnoreCase);
 
-                // Dodatkowa walidacja:
+                // Walidacja typu operacji vs rozszerzenie
                 if (isEncrypt && inputIsEnc)
                     throw new InvalidOperationException("Próba zaszyfrowania pliku, który już jest zaszyfrowany.");
 
                 if (!isEncrypt && !inputIsEnc)
                     throw new InvalidOperationException("Próba odszyfrowania pliku, który nie jest zaszyfrowany.");
 
+                stopwatch.Start();
+
+                AlgoId algoUsed;
+
                 if (isEncrypt)
                 {
-                    var algo = GetSelectedAlgo();
-                    CryptoCore.EncryptFile(inputPath, outputPath, password, algo);
+                    algoUsed = GetSelectedAlgo();
+                    CryptoCore.EncryptFile(inputPath, outputPath, password, algoUsed);
                 }
                 else
                 {
-                    CryptoCore.DecryptFile(inputPath, outputPath, password);
+                    // odczyt algorytmu z nagłówka
+                    algoUsed = CryptoCore.DecryptFile(inputPath, outputPath, password);
                 }
+
+                stopwatch.Stop();
+
+                // Log do textBoxa:
+                string operacja = isEncrypt ? "zaszyfrowania" : "odszyfrowania";
+                string line = $"Algorytm: {algoUsed}, czas {operacja}: {stopwatch.Elapsed.TotalMilliseconds:0.00} ms";
+
+                if (txtLog.Text.Length > 0)
+                    txtLog.AppendText(Environment.NewLine);
+
+                txtLog.AppendText(line);
 
                 // Sukces: pokaż tylko "Gotowe"
                 lblStatus.Text = "Gotowe";
@@ -172,7 +205,7 @@ namespace PorownywarkaSzyfrow
             }
             catch
             {
-                // Błąd: pokaż tylko "Błąd"
+                stopwatch.Stop();
                 MessageBox.Show(this, "Operacja nie powiodła się.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 lblStatus.Text = "Błąd";
             }

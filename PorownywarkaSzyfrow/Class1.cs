@@ -60,7 +60,8 @@ namespace PorownywarkaSzyfrow
             EncryptVigenereStream(inFs, outFs, password);
         }
 
-        public static void DecryptFile(string inputPath, string outputPath, string password)
+        // ZWRACA algorytm z nagłówka, żeby GUI mogło go pokazać w logu
+        public static AlgoId DecryptFile(string inputPath, string outputPath, string password)
         {
             if (!File.Exists(inputPath))
                 throw new FileNotFoundException("Plik wejściowy nie istnieje.", inputPath);
@@ -69,8 +70,9 @@ namespace PorownywarkaSzyfrow
             using var outFs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
 
             var header = ReadHeader(inFs);
+            var algo = header.Algo;
 
-            switch (header.Algo)
+            switch (algo)
             {
                 case AlgoId.Vigenere:
                     DecryptVigenereStream(inFs, outFs, password);
@@ -89,11 +91,12 @@ namespace PorownywarkaSzyfrow
                 default:
                     throw new InvalidOperationException("Nieobsługiwany algorytm w nagłówku.");
             }
+
+            return algo;
         }
 
         // === PONIŻEJ: reszta prywatnych metod z twojego Program.cs ===
         // Vigenere, DES/RC2, nagłówek, KDF itp.
-        // Skopiowałem je 1:1, tylko zmieniłem nazwę klasy/namespace.
 
         private static void EncryptVigenereStream(Stream input, Stream output, string password)
             => VigenereTransformStream(input, output, password, encrypt: true);
