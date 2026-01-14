@@ -11,7 +11,6 @@ namespace PorownywarkaSzyfrow
         {
             InitializeComponent();
 
-            // Inicjalizacja comboboxa, jeśli nie zrobiłeś tego w designerze
             if (cmbAlgorithm.Items.Count == 0)
             {
                 cmbAlgorithm.Items.Add("Vigenere");
@@ -20,21 +19,17 @@ namespace PorownywarkaSzyfrow
             }
             cmbAlgorithm.SelectedIndex = 0;
 
-            // Drag & Drop dla pola pliku wejściowego
             txtInputFile.AllowDrop = true;
             txtInputFile.DragEnter += TxtInputFile_DragEnter;
             txtInputFile.DragDrop += TxtInputFile_DragDrop;
 
-            // Na początku brak napisu
             lblStatus.Text = string.Empty;
 
-            // Podpięcie zdarzeń przycisków
             btnBrowseInput.Click += btnBrowseInput_Click;
             btnBrowseOutput.Click += btnBrowseOutput_Click;
             btnEncrypt.Click += btnEncrypt_Click;
             btnDecrypt.Click += btnDecrypt_Click;
 
-            // Kopiuj log
             btnCopyLog.Click += btnCopyLog_Click;
         }
 
@@ -53,7 +48,6 @@ namespace PorownywarkaSzyfrow
                 string filePath = files[0];
                 txtInputFile.Text = filePath;
 
-                // przy wyborze nowego pliku status i log znikają
                 lblStatus.Text = string.Empty;
                 txtLog.Clear();
 
@@ -85,7 +79,6 @@ namespace PorownywarkaSzyfrow
                 string filePath = ofd.FileName;
                 txtInputFile.Text = filePath;
 
-                // przy wyborze nowego pliku status i log znikają
                 lblStatus.Text = string.Empty;
                 txtLog.Clear();
 
@@ -117,7 +110,6 @@ namespace PorownywarkaSzyfrow
             {
                 txtOutputFile.Text = sfd.FileName;
                 lblStatus.Text = string.Empty;
-                // log zostawiamy – zmiana pliku wynikowego nie resetuje wyników pomiarów
             }
         }
 
@@ -163,7 +155,6 @@ namespace PorownywarkaSzyfrow
 
                 bool inputIsEnc = inputPath.EndsWith(".enc", StringComparison.OrdinalIgnoreCase);
 
-                // Walidacja typu operacji vs rozszerzenie
                 if (isEncrypt && inputIsEnc)
                     throw new InvalidOperationException("Próba zaszyfrowania pliku, który już jest zaszyfrowany.");
 
@@ -181,13 +172,11 @@ namespace PorownywarkaSzyfrow
                 }
                 else
                 {
-                    // odczyt algorytmu z nagłówka
                     algoUsed = CryptoCore.DecryptFile(inputPath, outputPath, password);
                 }
 
                 stopwatch.Stop();
 
-                // Log do textBoxa:
                 string operacja = isEncrypt ? "zaszyfrowania" : "odszyfrowania";
                 string line = $"Algorytm: {algoUsed}, czas {operacja}: {stopwatch.Elapsed.TotalMilliseconds:0.00} ms";
 
@@ -196,7 +185,6 @@ namespace PorownywarkaSzyfrow
 
                 txtLog.AppendText(line);
 
-                // Sukces: pokaż tylko "Gotowe"
                 lblStatus.Text = "Gotowe";
 
                 txtInputFile.Clear();
@@ -208,7 +196,6 @@ namespace PorownywarkaSzyfrow
                 stopwatch.Stop();
                 MessageBox.Show(this, "Operacja nie powiodła się.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                // Błąd: status i pola wchodzą w stan "reset", żeby się nic nie blokowało
                 lblStatus.Text = "Błąd";
 
                 txtInputFile.Clear();

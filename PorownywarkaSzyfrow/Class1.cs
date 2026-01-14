@@ -7,7 +7,6 @@ using System.Text;
 
 namespace PorownywarkaSzyfrow
 {
-    // MUSI być public, żeby Form1 go widział
     public enum AlgoId : byte
     {
         Vigenere = 1,
@@ -15,14 +14,10 @@ namespace PorownywarkaSzyfrow
         RC2 = 3
     }
 
-    // Cały "silnik" z twojego programu konsolowego
     public static class CryptoCore
     {
-        // Prosty format pliku: MAGIC(4) + VER(1) + ALG(1) + SALTLEN(1) + IVLEN(1) + SALT + IV + DATA...
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("TSZ1");
         private const byte Version = 1;
-
-        // === PUBLICZNE METODY, których użyje Form1 ===
 
         public static void EncryptFile(string inputPath, string outputPath, string password, AlgoId algo)
         {
@@ -55,12 +50,10 @@ namespace PorownywarkaSzyfrow
                 return;
             }
 
-            // Vigenère
             WriteHeader(outFs, AlgoId.Vigenere, Array.Empty<byte>(), Array.Empty<byte>());
             EncryptVigenereStream(inFs, outFs, password);
         }
 
-        // ZWRACA algorytm z nagłówka, żeby GUI mogło go pokazać w logu
         public static AlgoId DecryptFile(string inputPath, string outputPath, string password)
         {
             if (!File.Exists(inputPath))
@@ -94,9 +87,6 @@ namespace PorownywarkaSzyfrow
 
             return algo;
         }
-
-        // === PONIŻEJ: reszta prywatnych metod z twojego Program.cs ===
-        // Vigenere, DES/RC2, nagłówek, KDF itp.
 
         private static void EncryptVigenereStream(Stream input, Stream output, string password)
             => VigenereTransformStream(input, output, password, encrypt: true);
