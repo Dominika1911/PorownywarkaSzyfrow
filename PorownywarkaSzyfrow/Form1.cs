@@ -24,7 +24,8 @@ namespace PorownywarkaSzyfrow
             txtInputFile.DragEnter += TxtInputFile_DragEnter;
             txtInputFile.DragDrop += TxtInputFile_DragDrop;
 
-            lblStatus.Text = "Gotowy";
+            // Na początku brak napisu
+            lblStatus.Text = string.Empty;
 
             // Podpięcie zdarzeń przycisków (jeśli nie zrobiłeś tego w designerze)
             btnBrowseInput.Click += btnBrowseInput_Click;
@@ -47,6 +48,9 @@ namespace PorownywarkaSzyfrow
             {
                 txtInputFile.Text = files[0];
 
+                // przy wyborze nowego pliku status znika
+                lblStatus.Text = string.Empty;
+
                 if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
                 {
                     var dir = Path.GetDirectoryName(files[0]) ?? "";
@@ -67,6 +71,9 @@ namespace PorownywarkaSzyfrow
             if (ofd.ShowDialog(this) == DialogResult.OK)
             {
                 txtInputFile.Text = ofd.FileName;
+
+                // przy wyborze nowego pliku status znika
+                lblStatus.Text = string.Empty;
 
                 if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
                 {
@@ -89,6 +96,9 @@ namespace PorownywarkaSzyfrow
             if (sfd.ShowDialog(this) == DialogResult.OK)
             {
                 txtOutputFile.Text = sfd.FileName;
+
+                // zmiana pliku wynikowego też może czyścić status
+                lblStatus.Text = string.Empty;
             }
         }
 
@@ -126,13 +136,20 @@ namespace PorownywarkaSzyfrow
                 {
                     var algo = GetSelectedAlgo();
                     CryptoCore.EncryptFile(inputPath, outputPath, password, algo);
-                    lblStatus.Text = $"Zaszyfrowano pomyślnie: {outputPath}";
                 }
                 else
                 {
                     CryptoCore.DecryptFile(inputPath, outputPath, password);
-                    lblStatus.Text = $"Odszyfrowano pomyślnie: {outputPath}";
                 }
+
+                // Po udanej operacji:
+                // - status = "Gotowy"
+                // - czyścimy pola, żeby przygotować do kolejnej operacji
+                lblStatus.Text = "Gotowy";
+
+                txtInputFile.Clear();
+                txtOutputFile.Clear();
+                txtPassword.Clear();
             }
             catch (Exception ex)
             {
