@@ -145,21 +145,41 @@ namespace PorownywarkaSzyfrow
                 string password = txtPassword.Text;
 
                 if (string.IsNullOrWhiteSpace(inputPath) || !File.Exists(inputPath))
-                    throw new InvalidOperationException("Podaj istniejący plik wejściowy.");
+                {
+                    MessageBox.Show(this, "Podaj istniejący plik wejściowy.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    lblStatus.Text = "Błąd";
+                    return;
+                }
 
                 if (string.IsNullOrWhiteSpace(outputPath))
-                    throw new InvalidOperationException("Podaj ścieżkę pliku wynikowego.");
+                {
+                    MessageBox.Show(this, "Podaj ścieżkę pliku wynikowego.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    lblStatus.Text = "Błąd";
+                    return;
+                }
 
                 if (string.IsNullOrEmpty(password))
-                    throw new InvalidOperationException("Hasło nie może być puste.");
+                {
+                    MessageBox.Show(this, "Hasło nie może być puste.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    lblStatus.Text = "Błąd";
+                    return;
+                }
 
                 bool inputIsEnc = inputPath.EndsWith(".enc", StringComparison.OrdinalIgnoreCase);
 
                 if (isEncrypt && inputIsEnc)
-                    throw new InvalidOperationException("Próba zaszyfrowania pliku, który już jest zaszyfrowany.");
+                {
+                    MessageBox.Show(this, "Ten plik jest już zaszyfrowany (.enc).", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    lblStatus.Text = "Błąd";
+                    return;
+                }
 
                 if (!isEncrypt && !inputIsEnc)
-                    throw new InvalidOperationException("Próba odszyfrowania pliku, który nie jest zaszyfrowany.");
+                {
+                    MessageBox.Show(this, "Ten plik nie jest zaszyfrowany (.enc).", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    lblStatus.Text = "Błąd";
+                    return;
+                }
 
                 stopwatch.Start();
 
