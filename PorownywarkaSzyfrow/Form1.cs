@@ -6,5 +6,10 @@ namespace PorownywarkaSzyfrow
         {
             InitializeComponent();
         }
+
+        private void lblInput_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
