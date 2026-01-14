@@ -24,8 +24,8 @@ namespace PorownywarkaSzyfrow
             if (!File.Exists(inputPath))
                 throw new FileNotFoundException("Plik wejściowy nie istnieje.", inputPath);
 
-            using var inFs = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using var outFs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            using FileStream inFs = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using FileStream outFs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
 
             if (algo == AlgoId.DES)
             {
@@ -59,11 +59,11 @@ namespace PorownywarkaSzyfrow
             if (!File.Exists(inputPath))
                 throw new FileNotFoundException("Plik wejściowy nie istnieje.", inputPath);
 
-            using var inFs = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using var outFs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            using FileStream inFs = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using FileStream outFs = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
 
-            var header = ReadHeader(inFs);
-            var algo = header.Algo;
+            Header header = ReadHeader(inFs);
+            AlgoId algo = header.Algo;
 
             switch (algo)
             {
@@ -72,7 +72,7 @@ namespace PorownywarkaSzyfrow
                     break;
 
                 case AlgoId.DES:
-                    var desKey = DeriveKey(password, header.Salt, iterations: 100_000, keyBytes: 8);
+                    byte[] desKey = DeriveKey(password, header.Salt, iterations: 100_000, keyBytes: 8);
                     RejectWeakDesKey(desKey);
                     DecryptWithSymmetricKey(inFs, outFs, createAlgo: CreateDes, key: desKey, iv: header.IV);
                     break;
@@ -120,7 +120,7 @@ namespace PorownywarkaSzyfrow
 
         private static SymmetricAlgorithm CreateDes()
         {
-            var des = DES.Create();
+            DES des = DES.Create();
             des.Mode = CipherMode.CBC;
             des.Padding = PaddingMode.PKCS7;
             des.KeySize = 64;
@@ -129,7 +129,7 @@ namespace PorownywarkaSzyfrow
 
         private static SymmetricAlgorithm CreateRc2()
         {
-            var rc2 = RC2.Create();
+            RC2 rc2 = RC2.Create();
             rc2.Mode = CipherMode.CBC;
             rc2.Padding = PaddingMode.PKCS7;
             rc2.KeySize = 128;
@@ -146,11 +146,11 @@ namespace PorownywarkaSzyfrow
             Func<SymmetricAlgorithm> createAlgo,
             int keyBytes)
         {
-            using var algo = createAlgo();
+            using SymmetricAlgorithm algo = createAlgo();
             algo.Key = DeriveKey(password, salt, iterations: 100_000, keyBytes: keyBytes);
             algo.IV = iv;
 
-            using var crypto = new CryptoStream(output, algo.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true);
+            using CryptoStream crypto = new CryptoStream(output, algo.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true);
             CopyStream(input, crypto);
             crypto.FlushFinalBlock();
         }
@@ -164,11 +164,11 @@ namespace PorownywarkaSzyfrow
             Func<SymmetricAlgorithm> createAlgo,
             int keyBytes)
         {
-            using var algo = createAlgo();
+            using SymmetricAlgorithm algo = createAlgo();
             algo.Key = DeriveKey(password, salt, iterations: 100_000, keyBytes: keyBytes);
             algo.IV = iv;
 
-            using var crypto = new CryptoStream(input, algo.CreateDecryptor(), CryptoStreamMode.Read, leaveOpen: true);
+            using CryptoStream crypto = new CryptoStream(input, algo.CreateDecryptor(), CryptoStreamMode.Read, leaveOpen: true);
             CopyStream(crypto, output);
         }
 
@@ -179,11 +179,11 @@ namespace PorownywarkaSzyfrow
             byte[] key,
             byte[] iv)
         {
-            using var algo = createAlgo();
+            using SymmetricAlgorithm algo = createAlgo();
             algo.Key = key;
             algo.IV = iv;
 
-            using var crypto = new CryptoStream(output, algo.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true);
+            using CryptoStream crypto = new CryptoStream(output, algo.CreateEncryptor(), CryptoStreamMode.Write, leaveOpen: true);
             CopyStream(input, crypto);
             crypto.FlushFinalBlock();
         }
@@ -195,11 +195,11 @@ namespace PorownywarkaSzyfrow
             byte[] key,
             byte[] iv)
         {
-            using var algo = createAlgo();
+            using SymmetricAlgorithm algo = createAlgo();
             algo.Key = key;
             algo.IV = iv;
 
-            using var crypto = new CryptoStream(input, algo.CreateDecryptor(), CryptoStreamMode.Read, leaveOpen: true);
+            using CryptoStream crypto = new CryptoStream(input, algo.CreateDecryptor(), CryptoStreamMode.Read, leaveOpen: true);
             CopyStream(crypto, output);
         }
 
@@ -237,7 +237,7 @@ namespace PorownywarkaSzyfrow
 
         private static byte[] DeriveKey(string password, byte[] salt, int iterations, int keyBytes)
         {
-            using var kdf = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
+            using Rfc2898DeriveBytes kdf = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
             return kdf.GetBytes(keyBytes);
         }
 

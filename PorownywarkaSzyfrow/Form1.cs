@@ -53,8 +53,8 @@ namespace PorownywarkaSzyfrow
 
                 if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
                 {
-                    var dir = Path.GetDirectoryName(filePath) ?? "";
-                    var name = Path.GetFileName(filePath);
+                    string dir = Path.GetDirectoryName(filePath) ?? "";
+                    string name = Path.GetFileName(filePath);
 
                     if (name.EndsWith(".enc", StringComparison.OrdinalIgnoreCase))
                         name = name[..^4];
@@ -68,7 +68,7 @@ namespace PorownywarkaSzyfrow
 
         private void btnBrowseInput_Click(object? sender, EventArgs e)
         {
-            using var ofd = new OpenFileDialog
+            using OpenFileDialog ofd = new OpenFileDialog
             {
                 Title = "Wybierz plik wejściowy",
                 Filter = "Wszystkie pliki|*.*"
@@ -84,8 +84,8 @@ namespace PorownywarkaSzyfrow
 
                 if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
                 {
-                    var dir = Path.GetDirectoryName(filePath) ?? "";
-                    var name = Path.GetFileName(filePath);
+                    string dir = Path.GetDirectoryName(filePath) ?? "";
+                    string name = Path.GetFileName(filePath);
 
                     if (name.EndsWith(".enc", StringComparison.OrdinalIgnoreCase))
                         name = name[..^4];
@@ -99,7 +99,7 @@ namespace PorownywarkaSzyfrow
 
         private void btnBrowseOutput_Click(object? sender, EventArgs e)
         {
-            using var sfd = new SaveFileDialog
+            using SaveFileDialog sfd = new SaveFileDialog
             {
                 Title = "Wybierz plik wynikowy",
                 Filter = "Wszystkie pliki|*.*",
@@ -133,7 +133,7 @@ namespace PorownywarkaSzyfrow
 
         private void RunCrypto(bool isEncrypt)
         {
-            var stopwatch = new Stopwatch();
+            Stopwatch stopwatch = new Stopwatch();
 
             try
             {
