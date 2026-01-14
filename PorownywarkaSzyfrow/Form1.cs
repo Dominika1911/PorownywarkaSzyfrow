@@ -46,16 +46,24 @@ namespace PorownywarkaSzyfrow
         {
             if (e.Data?.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0)
             {
-                txtInputFile.Text = files[0];
+                string filePath = files[0];
+                txtInputFile.Text = filePath;
 
                 // przy wyborze nowego pliku status znika
                 lblStatus.Text = string.Empty;
 
                 if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
                 {
-                    var dir = Path.GetDirectoryName(files[0]) ?? "";
-                    var name = Path.GetFileName(files[0]);
-                    txtOutputFile.Text = Path.Combine(dir, name + ".enc");
+                    var dir = Path.GetDirectoryName(filePath) ?? "";
+                    var name = Path.GetFileName(filePath);
+
+                    // logika .enc
+                    if (name.EndsWith(".enc", StringComparison.OrdinalIgnoreCase))
+                        name = name[..^4];   // usuń ".enc"
+                    else
+                        name += ".enc";      // dodaj ".enc"
+
+                    txtOutputFile.Text = Path.Combine(dir, name);
                 }
             }
         }
@@ -70,16 +78,24 @@ namespace PorownywarkaSzyfrow
 
             if (ofd.ShowDialog(this) == DialogResult.OK)
             {
-                txtInputFile.Text = ofd.FileName;
+                string filePath = ofd.FileName;
+                txtInputFile.Text = filePath;
 
                 // przy wyborze nowego pliku status znika
                 lblStatus.Text = string.Empty;
 
                 if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
                 {
-                    var dir = Path.GetDirectoryName(ofd.FileName) ?? "";
-                    var name = Path.GetFileName(ofd.FileName);
-                    txtOutputFile.Text = Path.Combine(dir, name + ".enc");
+                    var dir = Path.GetDirectoryName(filePath) ?? "";
+                    var name = Path.GetFileName(filePath);
+
+                    // logika .enc
+                    if (name.EndsWith(".enc", StringComparison.OrdinalIgnoreCase))
+                        name = name[..^4];   // usuń ".enc"
+                    else
+                        name += ".enc";      // dodaj ".enc"
+
+                    txtOutputFile.Text = Path.Combine(dir, name);
                 }
             }
         }
