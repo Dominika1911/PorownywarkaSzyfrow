@@ -51,7 +51,6 @@
             lblInput.Size = new Size(106, 20);
             lblInput.TabIndex = 0;
             lblInput.Text = "Plik wejściowy:";
-            lblInput.Click += lblInput_Click;
             // 
             // txtInputFile
             // 
