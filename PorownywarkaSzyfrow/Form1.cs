@@ -81,7 +81,6 @@ namespace PorownywarkaSzyfrow
                 string filePath = ofd.FileName;
                 txtInputFile.Text = filePath;
 
-                // przy wyborze nowego pliku status znika
                 lblStatus.Text = string.Empty;
 
                 if (string.IsNullOrWhiteSpace(txtOutputFile.Text))
@@ -89,11 +88,10 @@ namespace PorownywarkaSzyfrow
                     var dir = Path.GetDirectoryName(filePath) ?? "";
                     var name = Path.GetFileName(filePath);
 
-                    // logika .enc
                     if (name.EndsWith(".enc", StringComparison.OrdinalIgnoreCase))
-                        name = name[..^4];   // usuń ".enc"
+                        name = name[..^4];
                     else
-                        name += ".enc";      // dodaj ".enc"
+                        name += ".enc";
 
                     txtOutputFile.Text = Path.Combine(dir, name);
                 }
@@ -112,8 +110,6 @@ namespace PorownywarkaSzyfrow
             if (sfd.ShowDialog(this) == DialogResult.OK)
             {
                 txtOutputFile.Text = sfd.FileName;
-
-                // zmiana pliku wynikowego też może czyścić status
                 lblStatus.Text = string.Empty;
             }
         }
@@ -148,6 +144,15 @@ namespace PorownywarkaSzyfrow
                 if (string.IsNullOrEmpty(password))
                     throw new InvalidOperationException("Hasło nie może być puste.");
 
+                bool inputIsEnc = inputPath.EndsWith(".enc", StringComparison.OrdinalIgnoreCase);
+
+                // Dodatkowa walidacja:
+                if (isEncrypt && inputIsEnc)
+                    throw new InvalidOperationException("Próba zaszyfrowania pliku, który już jest zaszyfrowany.");
+
+                if (!isEncrypt && !inputIsEnc)
+                    throw new InvalidOperationException("Próba odszyfrowania pliku, który nie jest zaszyfrowany.");
+
                 if (isEncrypt)
                 {
                     var algo = GetSelectedAlgo();
@@ -158,19 +163,18 @@ namespace PorownywarkaSzyfrow
                     CryptoCore.DecryptFile(inputPath, outputPath, password);
                 }
 
-                // Po udanej operacji:
-                // - status = "Gotowy"
-                // - czyścimy pola, żeby przygotować do kolejnej operacji
-                lblStatus.Text = "Gotowy";
+                // Sukces: pokaż tylko "Gotowe"
+                lblStatus.Text = "Gotowe";
 
                 txtInputFile.Clear();
                 txtOutputFile.Clear();
                 txtPassword.Clear();
             }
-            catch (Exception ex)
+            catch
             {
-                MessageBox.Show(this, ex.Message, "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                lblStatus.Text = "Błąd: " + ex.Message;
+                // Błąd: pokaż tylko "Błąd"
+                MessageBox.Show(this, "Operacja nie powiodła się.", "Błąd", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lblStatus.Text = "Błąd";
             }
             finally
             {
